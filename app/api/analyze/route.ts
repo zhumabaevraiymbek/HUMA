@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  console.error('ANTHROPIC_API_KEY is not set');
+}
+const client = new Anthropic({ apiKey });
 
 // Extract text from .docx using mammoth
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
