@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
+export const maxDuration = 60;
+export const runtime = 'nodejs';
+
 const apiKey = process.env.ANTHROPIC_API_KEY;
 if (!apiKey) {
   console.error('ANTHROPIC_API_KEY is not set');
