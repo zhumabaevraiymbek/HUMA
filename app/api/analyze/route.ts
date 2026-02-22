@@ -125,7 +125,7 @@ Respond ONLY with a valid JSON object in this exact format (no markdown, no expl
 Where overall_score is 0 = entirely human-written, 100 = entirely AI-generated.`;
 
     const message = await client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4096,
       messages: [
         {
