@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 type Lang = 'en' | 'ru' | 'kk';
+type InputMode = 'file' | 'text';
 
 interface ParagraphResult {
   index: number;
@@ -32,14 +33,19 @@ const T = {
     tagline: 'Forensic Document Analysis',
     title1: 'Detect AI-Generated',
     title2: 'Content',
-    subtitle: 'Upload a Word document. Our forensic engine analyses linguistic patterns, structure, and style to determine AI authorship with paragraph-level precision.',
+    subtitle: 'Upload a Word document or paste text. Our forensic engine analyses linguistic patterns to determine AI authorship with paragraph-level precision.',
+    tab_file: 'Upload File',
+    tab_text: 'Paste Text',
     dropzone: 'Drop your document here',
     dropzone_sub: 'or click to browse — .docx, .doc supported',
+    textarea_placeholder: 'Paste your text here (minimum 100 characters)...',
+    analyze_btn: 'Analyze Text',
     feat1: '✓ Secure analysis', feat2: '✓ No file storage', feat3: '✓ Paragraph-level results',
     analysing: 'Analysing',
     step1_label: 'Uploading document', step1_sub: 'Transferring file securely',
     step2_label: 'Extracting text content', step2_sub: 'Parsing .docx structure',
     step3_label: 'Running forensic analysis', step3_sub: 'Consulting AI detection model',
+    step1_text_label: 'Processing text', step1_text_sub: 'Preparing your input',
     analysis_complete: 'Analysis Complete',
     words: 'words', paragraphs: 'paragraphs', truncated: 'truncated at 40k chars',
     new_analysis: '← New Analysis', summary_label: 'Summary',
@@ -47,19 +53,25 @@ const T = {
     indicators: 'Key Indicators Detected', breakdown: 'Paragraph Breakdown',
     human: 'HUMAN', mixed: 'MIXED', ai: 'AI',
     online: 'SYSTEM ONLINE', footer: 'Powered by Claude · No data retained', dismiss: 'Dismiss',
+    text_too_short: 'Text is too short. Please enter at least 100 characters.',
   },
   ru: {
     tagline: 'Криминалистический анализ документов',
     title1: 'Определи AI-сгенерированный',
     title2: 'Контент',
-    subtitle: 'Загрузи документ Word. Наш движок анализирует лингвистические паттерны, структуру и стиль для определения авторства ИИ на уровне абзацев.',
+    subtitle: 'Загрузи документ Word или вставь текст. Наш движок анализирует лингвистические паттерны для определения авторства ИИ на уровне абзацев.',
+    tab_file: 'Загрузить файл',
+    tab_text: 'Вставить текст',
     dropzone: 'Перетащи документ сюда',
     dropzone_sub: 'или нажми для выбора — поддерживаются .docx, .doc',
+    textarea_placeholder: 'Вставь текст здесь (минимум 100 символов)...',
+    analyze_btn: 'Анализировать',
     feat1: '✓ Безопасный анализ', feat2: '✓ Файлы не хранятся', feat3: '✓ Анализ по абзацам',
     analysing: 'Анализируется',
     step1_label: 'Загрузка документа', step1_sub: 'Безопасная передача файла',
     step2_label: 'Извлечение текста', step2_sub: 'Разбор структуры .docx',
     step3_label: 'Криминалистический анализ', step3_sub: 'Запрос к модели обнаружения ИИ',
+    step1_text_label: 'Обработка текста', step1_text_sub: 'Подготовка введённых данных',
     analysis_complete: 'Анализ завершён',
     words: 'слов', paragraphs: 'абзацев', truncated: 'обрезано до 40к символов',
     new_analysis: '← Новый анализ', summary_label: 'Резюме',
@@ -67,19 +79,25 @@ const T = {
     indicators: 'Обнаруженные индикаторы', breakdown: 'Анализ по абзацам',
     human: 'ЧЕЛОВЕК', mixed: 'СМЕШАНО', ai: 'ИИ',
     online: 'СИСТЕМА ОНЛАЙН', footer: 'Работает на Claude · Файлы не сохраняются', dismiss: 'Закрыть',
+    text_too_short: 'Текст слишком короткий. Введите минимум 100 символов.',
   },
   kk: {
     tagline: 'Сот-криминалистикалық құжат талдауы',
     title1: 'AI жасаған контентті',
     title2: 'Анықта',
-    subtitle: 'Word құжатын жүктеңіз. Біздің қозғалтқыш абзац деңгейінде AI авторлығын анықтау үшін лингвистикалық үлгілерді, құрылым мен стильді талдайды.',
+    subtitle: 'Word құжатын жүктеңіз немесе мәтін қойыңыз. Біздің қозғалтқыш абзац деңгейінде AI авторлығын анықтау үшін лингвистикалық үлгілерді талдайды.',
+    tab_file: 'Файл жүктеу',
+    tab_text: 'Мәтін қою',
     dropzone: 'Құжатты осы жерге апарыңыз',
     dropzone_sub: 'немесе шолу үшін басыңыз — .docx, .doc қолданылады',
+    textarea_placeholder: 'Мәтінді осы жерге қойыңыз (кемінде 100 таңба)...',
+    analyze_btn: 'Талдау',
     feat1: '✓ Қауіпсіз талдау', feat2: '✓ Файлдар сақталмайды', feat3: '✓ Абзац деңгейіндегі нәтижелер',
     analysing: 'Талдануда',
     step1_label: 'Құжат жүктелуде', step1_sub: 'Файлды қауіпсіз тасымалдау',
     step2_label: 'Мәтін мазмұнын шығару', step2_sub: '.docx құрылымын талдау',
     step3_label: 'Криминалистикалық талдау жүргізілуде', step3_sub: 'AI анықтау моделіне сұрау',
+    step1_text_label: 'Мәтінді өңдеу', step1_text_sub: 'Енгізілген деректерді дайындау',
     analysis_complete: 'Талдау аяқталды',
     words: 'сөз', paragraphs: 'абзац', truncated: '40к таңбаға дейін қысқартылды',
     new_analysis: '← Жаңа талдау', summary_label: 'Қорытынды',
@@ -87,6 +105,7 @@ const T = {
     indicators: 'Анықталған индикаторлар', breakdown: 'Абзац бойынша талдау',
     human: 'АДАМ', mixed: 'АРАЛАС', ai: 'AI',
     online: 'ЖҮЙЕ ОНЛАЙН', footer: 'Claude негізінде · Файлдар сақталмайды', dismiss: 'Жабу',
+    text_too_short: 'Мәтін тым қысқа. Кемінде 100 таңба енгізіңіз.',
   },
 };
 
@@ -177,12 +196,18 @@ function ParagraphCard({ para, index, t }: { para: ParagraphResult; index: numbe
   );
 }
 
-function AnalysisLoader({ stage, t }: { stage: Stage; t: typeof T['en'] }) {
-  const STEPS = [
-    { key: 'uploading', label: t.step1_label, sub: t.step1_sub },
-    { key: 'extracting', label: t.step2_label, sub: t.step2_sub },
-    { key: 'analyzing', label: t.step3_label, sub: t.step3_sub },
-  ];
+function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: typeof T['en'] }) {
+  const STEPS = mode === 'text'
+    ? [
+        { key: 'uploading', label: t.step1_text_label, sub: t.step1_text_sub },
+        { key: 'extracting', label: t.step2_label, sub: t.step2_sub },
+        { key: 'analyzing', label: t.step3_label, sub: t.step3_sub },
+      ]
+    : [
+        { key: 'uploading', label: t.step1_label, sub: t.step1_sub },
+        { key: 'extracting', label: t.step2_label, sub: t.step2_sub },
+        { key: 'analyzing', label: t.step3_label, sub: t.step3_sub },
+      ];
   const currentIdx = STEPS.findIndex(s => s.key === stage);
 
   return (
@@ -219,6 +244,8 @@ function AnalysisLoader({ stage, t }: { stage: Stage; t: typeof T['en'] }) {
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>('en');
+  const [inputMode, setInputMode] = useState<InputMode>('file');
+  const [pastedText, setPastedText] = useState('');
   const [stage, setStage] = useState<Stage>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
@@ -228,14 +255,7 @@ export default function Home() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const t = T[lang];
 
-  const analyze = useCallback(async (file: File) => {
-    setFileName(file.name);
-    setError('');
-    setResult(null);
-    setStage('uploading');
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('lang', lang);
+  const runAnalysis = useCallback(async (formData: FormData) => {
     try {
       await new Promise(r => setTimeout(r, 600));
       setStage('extracting');
@@ -251,14 +271,48 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setStage('error');
     }
-  }, [lang]);
+  }, []);
+
+  const analyzeFile = useCallback(async (file: File) => {
+    setFileName(file.name);
+    setError('');
+    setResult(null);
+    setStage('uploading');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('lang', lang);
+    await runAnalysis(formData);
+  }, [lang, runAnalysis]);
+
+  const analyzeText = useCallback(async () => {
+    if (pastedText.trim().length < 100) {
+      setError(t.text_too_short);
+      setStage('error');
+      return;
+    }
+    setFileName('plain-text');
+    setError('');
+    setResult(null);
+    setStage('uploading');
+    const formData = new FormData();
+    formData.append('text', pastedText);
+    formData.append('lang', lang);
+    await runAnalysis(formData);
+  }, [pastedText, lang, t.text_too_short, runAnalysis]);
 
   const handleFile = useCallback((file: File) => {
     if (!file.name.match(/\.(docx|doc)$/i)) { setError('Please upload a .docx or .doc file'); setStage('error'); return; }
-    analyze(file);
-  }, [analyze]);
+    analyzeFile(file);
+  }, [analyzeFile]);
 
-  const reset = () => { setStage('idle'); setResult(null); setError(''); setFileName(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
+  const reset = () => {
+    setStage('idle');
+    setResult(null);
+    setError('');
+    setFileName('');
+    setPastedText('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const isLoading = ['uploading', 'extracting', 'analyzing'].includes(stage);
 
@@ -294,25 +348,76 @@ export default function Home() {
         <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-8 mb-8 amber-glow">
           {stage === 'idle' || stage === 'error' ? (
             <>
-              <div
-                className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-[#1e1e30] hover:border-amber-500/40'}`}
-                onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                onDragLeave={() => setDragActive(false)}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input ref={fileInputRef} type="file" accept=".docx,.doc" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 border border-[#1e1e30] rounded-lg flex items-center justify-center text-3xl text-gray-600">⬡</div>
-                  <div>
-                    <p className="text-white mb-1">{t.dropzone}</p>
-                    <p className="text-gray-600 text-sm">{t.dropzone_sub}</p>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-700">
-                    <span>{t.feat1}</span><span>{t.feat2}</span><span>{t.feat3}</span>
+              {/* Tab switcher */}
+              <div className="flex gap-1 mb-6 border border-[#1e1e30] rounded-lg p-1 w-fit">
+                {(['file', 'text'] as InputMode[]).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => { setInputMode(mode); setError(''); }}
+                    className="px-4 py-2 text-sm rounded-md transition-all"
+                    style={{
+                      background: inputMode === mode ? '#f59e0b' : 'transparent',
+                      color: inputMode === mode ? '#080810' : '#6b7280',
+                      fontWeight: inputMode === mode ? 600 : 400,
+                    }}
+                  >
+                    {mode === 'file' ? `⬡ ${t.tab_file}` : `✎ ${t.tab_text}`}
+                  </button>
+                ))}
+              </div>
+
+              {/* File upload */}
+              {inputMode === 'file' && (
+                <div
+                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-[#1e1e30] hover:border-amber-500/40'}`}
+                  onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                  onDragLeave={() => setDragActive(false)}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input ref={fileInputRef} type="file" accept=".docx,.doc" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border border-[#1e1e30] rounded-lg flex items-center justify-center text-3xl text-gray-600">⬡</div>
+                    <div>
+                      <p className="text-white mb-1">{t.dropzone}</p>
+                      <p className="text-gray-600 text-sm">{t.dropzone_sub}</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-700">
+                      <span>{t.feat1}</span><span>{t.feat2}</span><span>{t.feat3}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Text input */}
+              {inputMode === 'text' && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <textarea
+                      value={pastedText}
+                      onChange={(e) => setPastedText(e.target.value)}
+                      placeholder={t.textarea_placeholder}
+                      className="w-full h-64 bg-[#080810] border border-[#1e1e30] rounded-lg p-4 text-sm text-gray-300 placeholder-gray-700 resize-none focus:outline-none focus:border-amber-500/40 transition-colors font-mono leading-relaxed"
+                    />
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-700">
+                      {pastedText.length} chars
+                    </div>
+                  </div>
+                  <button
+                    onClick={analyzeText}
+                    disabled={pastedText.trim().length < 100}
+                    className="w-full py-3 rounded-lg text-sm font-semibold transition-all"
+                    style={{
+                      background: pastedText.trim().length >= 100 ? '#f59e0b' : '#1e1e30',
+                      color: pastedText.trim().length >= 100 ? '#080810' : '#374151',
+                      cursor: pastedText.trim().length >= 100 ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {t.analyze_btn} →
+                  </button>
+                </div>
+              )}
+
               {stage === 'error' && (
                 <div className="mt-4 rounded border border-red-500/30 bg-red-500/5 p-4 flex items-start gap-3 animate-fade-in-up">
                   <span className="text-red-400 shrink-0">⚠</span>
@@ -326,7 +431,7 @@ export default function Home() {
               <p className="text-center text-xs text-gray-600 mb-8 tracking-widest uppercase">
                 {t.analysing}: <span className="text-amber-500">{fileName}</span>
               </p>
-              <AnalysisLoader stage={stage} t={t} />
+              <AnalysisLoader stage={stage} mode={inputMode} t={t} />
             </div>
           ) : null}
         </div>
