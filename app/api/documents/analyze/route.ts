@@ -18,10 +18,11 @@ async function extractText(file: File): Promise<string> {
   const fileName = file.name.toLowerCase();
 
   if (fileName.endsWith('.pdf')) {
-    const pdfParse = await import('pdf-parse');
-    const data = await pdfParse.default(buffer);
-    return data.text;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfParse = await import('pdf-parse') as any;
+  const data = await pdfParse.default(buffer);
+  return data.text;
+}
 
   if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
     const mammoth = await import('mammoth');
