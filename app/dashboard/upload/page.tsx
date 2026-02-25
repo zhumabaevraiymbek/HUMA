@@ -77,7 +77,7 @@ export default function UploadPage() {
       const safeFileName = file.name
   .replace(/[^a-zA-Z0-9._-]/g, '_')
   .replace(/_{2,}/g, '_');
-const filePath = `${profile.university_id}/${Date.now()}_${safeFileName}`;
+  const filePath = `${profile?.university_id ?? 'unknown'}/${Date.now()}_${safeFileName}`;
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
