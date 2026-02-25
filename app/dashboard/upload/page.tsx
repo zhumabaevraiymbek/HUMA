@@ -9,8 +9,13 @@ interface Course {
   name: string;
 }
 
+interface Profile {
+  university_id: string | null;
+}
+
 export default function UploadPage() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [courseId, setCourseId] = useState('');
   const [studentName, setStudentName] = useState('');
   const [title, setTitle] = useState('');
@@ -24,28 +29,32 @@ export default function UploadPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    const loadCourses = async () => {
-      const { data: profile } = await supabase
+    const loadData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: prof } = await supabase
         .from('profiles')
         .select('university_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .eq('id', user.id)
         .single();
 
-      if (profile?.university_id) {
+      setProfile(prof);
+
+      if (prof?.university_id) {
         const { data } = await supabase
           .from('courses')
           .select('id, name')
-          .eq('university_id', profile.university_id);
+          .eq('university_id', prof.university_id);
         setCourses(data || []);
       }
     };
-    loadCourses();
+    loadData();
   }, []);
 
   const handleFile = useCallback((f: File) => {
-    const allowed = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'application/pdf'];
     const allowedExt = /\.(docx|doc|pdf)$/i;
-    if (!allowed.includes(f.type) && !allowedExt.test(f.name)) {
+    if (!allowedExt.test(f.name)) {
       setError('Только .docx, .doc или .pdf файлы');
       return;
     }
@@ -67,17 +76,16 @@ export default function UploadPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('university_id')
-        .eq('id', user!.id)
-        .single();
+      if (!user) throw new Error('Не авторизован');
 
-      // Загружаем файл в Storage
+      const universityId = profile?.university_id ?? '';
+      if (!universityId) throw new Error('Не указан университет');
+
       const safeFileName = file.name
-  .replace(/[^a-zA-Z0-9._-]/g, '_')
-  .replace(/_{2,}/g, '_');
-  const filePath = `${profile?.university_id ?? 'unknown'}/${Date.now()}_${safeFileName}`;
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/_{2,}/g, '_');
+      const filePath = `${universityId}/${Date.now()}_${safeFileName}`;
+
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
@@ -86,16 +94,15 @@ export default function UploadPage() {
 
       setStage('analyzing');
 
-      // Отправляем на анализ
       const formData = new FormData();
       formData.append('file', file);
       formData.append('lang', 'ru');
       formData.append('title', title);
       formData.append('studentName', studentName);
       formData.append('courseId', courseId);
-      formData.append('universityId', profile.university_id);
+      formData.append('universityId', universityId);
       formData.append('filePath', filePath);
-      formData.append('uploadedBy', user!.id);
+      formData.append('uploadedBy', user.id);
 
       const res = await fetch('/api/documents/analyze', { method: 'POST', body: formData });
       const data = await res.json();
@@ -136,7 +143,6 @@ export default function UploadPage() {
 
         {stage === 'idle' || stage === 'error' ? (
           <div className="space-y-6">
-            {/* Metadata */}
             <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">Информация о работе</p>
               <div className="grid md:grid-cols-2 gap-4">
@@ -176,8 +182,7 @@ export default function UploadPage() {
               </div>
             </div>
 
-            {/* File upload */}
-            <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6 amber-glow">
+            <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">Файл</p>
               {!file ? (
                 <div
@@ -240,7 +245,6 @@ export default function UploadPage() {
           <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-12 flex flex-col items-center gap-8">
             <div className="relative flex items-center justify-center" style={{ width: 100, height: 100 }}>
               <div className="absolute inset-0 rounded-full border border-amber-500/20 animate-ping" />
-              <div className="absolute rounded-full border-t border-amber-500" style={{ inset: 12, animation: 'spin 1.5s linear infinite' }} />
               <div className="text-amber-400 text-2xl">⬡</div>
             </div>
             <div className="text-center">
