@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface University {
   id: string;
@@ -34,6 +36,9 @@ export default function UniversityDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const supabase = createClient();
+  const { lang, t } = useLanguage();
+
+  const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', kk: 'kk-KZ' };
 
   const load = async () => {
     const { data: uni } = await supabase
@@ -56,7 +61,7 @@ export default function UniversityDetailPage() {
 
   const handleCreateUser = async () => {
     if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setError('Заполните все поля');
+      setError(t('uniDetail.error.fillAll'));
       return;
     }
     setSaving(true);
@@ -72,12 +77,12 @@ export default function UniversityDetailPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || 'Ошибка при создании пользователя');
+      setError(data.error || t('uniDetail.error.create'));
       setSaving(false);
       return;
     }
 
-    setSuccess(`Пользователь ${fullName} успешно создан!`);
+    setSuccess(t('uniDetail.success.created', { name: fullName }));
     setFullName('');
     setEmail('');
     setPassword('');
@@ -93,52 +98,49 @@ export default function UniversityDetailPage() {
     student: '#94a3b8',
   };
 
-  const roleLabels: Record<string, string> = {
-    admin: 'Администратор',
-    teacher: 'Преподаватель',
-    student: 'Студент',
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen grid-bg flex items-center justify-center">
-        <div className="text-amber-400 text-sm animate-pulse">Загрузка...</div>
+        <div className="text-amber-400 text-sm animate-pulse">{t('common.loading')}</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen grid-bg">
-      <header className="border-b border-[#1e1e30] px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard/universities')}
               className="text-gray-600 hover:text-amber-400 transition-colors text-sm"
             >
-              ← Назад
+              {t('nav.back')}
             </button>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
                 <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
               </div>
-              <span className="font-display text-xl tracking-[0.15em] text-white">VERIDOC</span>
+              <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
             </div>
           </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="text-xs px-4 py-2 rounded transition-all"
-            style={{ background: '#f59e0b', color: '#080810', fontWeight: 600 }}
-          >
-            + Добавить пользователя
-          </button>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="text-xs px-4 py-2 rounded transition-all"
+              style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)', fontWeight: 600 }}
+            >
+              {t('uniDetail.addBtn')}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">Университет</p>
-          <h1 className="font-display text-4xl text-white">{university?.name}</h1>
+          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">{t('uniDetail.subtitle')}</p>
+          <h1 className="font-display text-4xl text-gray-900">{university?.name}</h1>
           {university?.domain && (
             <p className="text-gray-600 text-sm mt-1">@{university.domain}</p>
           )}
@@ -147,60 +149,60 @@ export default function UniversityDetailPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-10">
           {[
-            { label: 'Всего пользователей', value: users.length },
-            { label: 'Преподавателей', value: users.filter(u => u.role === 'teacher').length },
-            { label: 'Студентов', value: users.filter(u => u.role === 'student').length },
+            { labelKey: 'uniDetail.stat.total', value: users.length },
+            { labelKey: 'uniDetail.stat.teachers', value: users.filter(u => u.role === 'teacher').length },
+            { labelKey: 'uniDetail.stat.students', value: users.filter(u => u.role === 'student').length },
           ].map(stat => (
-            <div key={stat.label} className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5">
+            <div key={stat.labelKey} className="rounded-lg border border-border bg-surface p-5">
               <p className="text-2xl text-amber-400 mb-1">{stat.value}</p>
-              <p className="text-xs text-gray-600 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-xs text-gray-600 uppercase tracking-widest">{t(stat.labelKey)}</p>
             </div>
           ))}
         </div>
 
         {/* Add user form */}
         {showForm && (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6 mb-8 animate-fade-in-up">
-            <p className="text-sm text-white font-semibold mb-4">Новый пользователь</p>
+          <div className="rounded-lg border border-border bg-surface p-6 mb-8 animate-fade-in-up">
+            <p className="text-sm text-gray-900 font-semibold mb-4">{t('uniDetail.formTitle')}</p>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Полное имя *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('uniDetail.labelFullName')}</label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Иван Иванов"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Email *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('uniDetail.labelEmail')}</label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ivan@narxoz.kz"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  placeholder={`ivan@${university?.domain || 'university.kz'}`}
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Пароль *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('uniDetail.labelPassword')}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Роль *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('uniDetail.labelRole')}</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as 'admin' | 'teacher' | 'student')}
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 >
-                  <option value="admin">Администратор</option>
-                  <option value="teacher">Преподаватель</option>
-                  <option value="student">Студент</option>
+                  <option value="admin">{t('role.admin')}</option>
+                  <option value="teacher">{t('role.teacher')}</option>
+                  <option value="student">{t('role.student')}</option>
                 </select>
               </div>
             </div>
@@ -221,15 +223,15 @@ export default function UniversityDetailPage() {
                 onClick={handleCreateUser}
                 disabled={saving}
                 className="px-6 py-2 rounded text-sm font-semibold transition-all"
-                style={{ background: '#f59e0b', color: '#080810' }}
+                style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)' }}
               >
-                {saving ? 'Создаём...' : 'Создать'}
+                {saving ? t('common.creating') : t('common.create')}
               </button>
               <button
                 onClick={() => { setShowForm(false); setError(''); setSuccess(''); }}
-                className="px-6 py-2 rounded text-sm border border-[#1e1e30] text-gray-500 hover:text-white transition-colors"
+                className="px-6 py-2 rounded text-sm border border-border text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Отмена
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -237,13 +239,13 @@ export default function UniversityDetailPage() {
 
         {/* Users list */}
         {users.length === 0 ? (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-12 text-center">
-            <p className="text-gray-600 text-sm">Нет пользователей. Добавьте первого!</p>
+          <div className="rounded-lg border border-border bg-surface p-12 text-center">
+            <p className="text-gray-600 text-sm">{t('uniDetail.empty')}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {users.map((user) => (
-              <div key={user.id} className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5 flex items-center justify-between">
+              <div key={user.id} className="rounded-lg border border-border bg-surface p-5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div
                     className="w-10 h-10 rounded-full border flex items-center justify-center text-sm font-semibold"
@@ -252,9 +254,9 @@ export default function UniversityDetailPage() {
                     {user.full_name?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-semibold">{user.full_name}</p>
+                    <p className="text-gray-900 text-sm font-semibold">{user.full_name}</p>
                     <p className="text-gray-600 text-xs mt-0.5">
-                      {new Date(user.created_at).toLocaleDateString('ru-RU')}
+                      {new Date(user.created_at).toLocaleDateString(localeMap[lang])}
                     </p>
                   </div>
                 </div>
@@ -262,7 +264,7 @@ export default function UniversityDetailPage() {
                   className="text-[10px] px-2 py-1 rounded border"
                   style={{ color: roleColors[user.role], borderColor: roleColors[user.role] + '40', background: roleColors[user.role] + '10' }}
                 >
-                  {roleLabels[user.role]}
+                  {t(`role.${user.role}`)}
                 </span>
               </div>
             ))}

@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Course {
   id: string;
@@ -27,6 +29,7 @@ export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { lang, t } = useLanguage();
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,20 +58,20 @@ export default function UploadPage() {
   const handleFile = useCallback((f: File) => {
     const allowedExt = /\.(docx|doc|pdf)$/i;
     if (!allowedExt.test(f.name)) {
-      setError('Только .docx, .doc или .pdf файлы');
+      setError(t('upload.error.fileType'));
       return;
     }
     if (f.size > 50 * 1024 * 1024) {
-      setError('Файл слишком большой. Максимум 50MB');
+      setError(t('upload.error.fileSize'));
       return;
     }
     setError('');
     setFile(f);
-  }, []);
+  }, [t]);
 
   const handleSubmit = async () => {
     if (!file || !title.trim()) {
-      setError('Укажите название работы и загрузите файл');
+      setError(t('upload.error.noTitle'));
       return;
     }
     setStage('uploading');
@@ -76,10 +79,10 @@ export default function UploadPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Не авторизован');
+      if (!user) throw new Error(t('upload.error.unauth'));
 
       const universityId = profile?.university_id ?? '';
-      if (!universityId) throw new Error('Не указан университет');
+      if (!universityId) throw new Error(t('upload.error.noUni'));
 
       const safeFileName = file.name
         .replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -96,7 +99,7 @@ export default function UploadPage() {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('lang', 'ru');
+      formData.append('lang', lang);
       formData.append('title', title);
       formData.append('studentName', studentName);
       formData.append('courseId', courseId);
@@ -107,72 +110,73 @@ export default function UploadPage() {
       const res = await fetch('/api/documents/analyze', { method: 'POST', body: formData });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || 'Ошибка анализа');
+      if (!res.ok) throw new Error(data.error || t('upload.error.analysis'));
 
       setResultId(data.documentId);
       setStage('done');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('upload.error.unknown'));
       setStage('error');
     }
   };
 
   return (
     <div className="min-h-screen grid-bg">
-      <header className="border-b border-[#1e1e30] px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => router.push('/dashboard')} className="text-gray-600 hover:text-amber-400 transition-colors text-sm">
-              ← Назад
+              {t('nav.back')}
             </button>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
                 <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
               </div>
-              <span className="font-display text-xl tracking-[0.15em] text-white">VERIDOC</span>
+              <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
             </div>
           </div>
+          <LanguageSwitcher />
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">Загрузка</p>
-          <h1 className="font-display text-4xl text-white">Проверить работу</h1>
+          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">{t('upload.subtitle')}</p>
+          <h1 className="font-display text-4xl text-gray-900">{t('upload.heading')}</h1>
         </div>
 
         {stage === 'idle' || stage === 'error' ? (
           <div className="space-y-6">
-            <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6">
-              <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">Информация о работе</p>
+            <div className="rounded-lg border border-border bg-surface p-6">
+              <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">{t('upload.sectionInfo')}</p>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Название работы *</label>
+                  <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('upload.labelTitle')}</label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Дипломная работа по маркетингу"
-                    className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                    className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Имя студента</label>
+                  <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('upload.labelStudent')}</label>
                   <input
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     placeholder="Иван Иванов"
-                    className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                    className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                   />
                 </div>
                 {courses.length > 0 && (
                   <div>
-                    <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Курс</label>
+                    <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('upload.labelCourse')}</label>
                     <select
                       value={courseId}
                       onChange={(e) => setCourseId(e.target.value)}
-                      className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                      className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                     >
-                      <option value="">Не указан</option>
+                      <option value="">{t('upload.courseNone')}</option>
                       {courses.map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -182,11 +186,11 @@ export default function UploadPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6">
-              <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">Файл</p>
+            <div className="rounded-lg border border-border bg-surface p-6">
+              <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">{t('upload.sectionFile')}</p>
               {!file ? (
                 <div
-                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-[#1e1e30] hover:border-amber-500/40'}`}
+                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-border hover:border-amber-500/40'}`}
                   onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                   onDragLeave={() => setDragActive(false)}
@@ -201,8 +205,8 @@ export default function UploadPage() {
                       <span className="text-xs px-3 py-1.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400">PDF</span>
                     </div>
                     <div>
-                      <p className="text-white mb-1">Перетащи файл сюда</p>
-                      <p className="text-gray-600 text-sm">или нажми для выбора · максимум 50MB</p>
+                      <p className="text-gray-900 mb-1">{t('upload.dropzone')}</p>
+                      <p className="text-gray-600 text-sm">{t('upload.dropzoneSub')}</p>
                     </div>
                   </div>
                 </div>
@@ -211,12 +215,12 @@ export default function UploadPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-amber-400 text-lg">⬡</span>
                     <div>
-                      <p className="text-white text-sm">{file.name}</p>
+                      <p className="text-gray-900 text-sm">{file.name}</p>
                       <p className="text-gray-600 text-xs">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                   <button onClick={() => setFile(null)} className="text-gray-600 hover:text-red-400 transition-colors text-xs">
-                    Удалить
+                    {t('upload.removeFile')}
                   </button>
                 </div>
               )}
@@ -233,47 +237,47 @@ export default function UploadPage() {
               disabled={!file || !title.trim()}
               className="w-full py-4 rounded-lg text-sm font-semibold transition-all"
               style={{
-                background: !file || !title.trim() ? '#1e1e30' : '#f59e0b',
-                color: !file || !title.trim() ? '#374151' : '#080810',
+                background: !file || !title.trim() ? 'var(--color-border, #e5e7eb)' : 'var(--color-accent, #f59e0b)',
+                color: !file || !title.trim() ? '#374151' : 'var(--color-text, #111827)',
                 cursor: !file || !title.trim() ? 'not-allowed' : 'pointer',
               }}
             >
-              Проверить работу →
+              {t('upload.submitBtn')}
             </button>
           </div>
         ) : stage === 'uploading' || stage === 'analyzing' ? (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-12 flex flex-col items-center gap-8">
+          <div className="rounded-lg border border-border bg-surface p-12 flex flex-col items-center gap-8">
             <div className="relative flex items-center justify-center" style={{ width: 100, height: 100 }}>
               <div className="absolute inset-0 rounded-full border border-amber-500/20 animate-ping" />
               <div className="text-amber-400 text-2xl">⬡</div>
             </div>
             <div className="text-center">
-              <p className="text-white text-sm font-semibold mb-1">
-                {stage === 'uploading' ? 'Загружаем файл...' : 'Анализируем документ...'}
+              <p className="text-gray-900 text-sm font-semibold mb-1">
+                {stage === 'uploading' ? t('upload.stage.uploading') : t('upload.stage.analyzing')}
               </p>
               <p className="text-gray-600 text-xs">
-                {stage === 'uploading' ? 'Сохраняем в хранилище' : 'Проверка на AI и плагиат'}
+                {stage === 'uploading' ? t('upload.stage.uploadingSub') : t('upload.stage.analyzingSub')}
               </p>
             </div>
           </div>
         ) : stage === 'done' ? (
           <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-8 text-center animate-fade-in-up">
             <p className="text-green-400 text-4xl mb-4">✓</p>
-            <p className="text-white font-semibold mb-2">Анализ завершён!</p>
-            <p className="text-gray-600 text-sm mb-6">Работа проверена и добавлена в базу</p>
+            <p className="text-gray-900 font-semibold mb-2">{t('upload.done.title')}</p>
+            <p className="text-gray-600 text-sm mb-6">{t('upload.done.sub')}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => router.push(`/dashboard/documents/${resultId}`)}
                 className="px-6 py-2 rounded text-sm font-semibold"
-                style={{ background: '#f59e0b', color: '#080810' }}
+                style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)' }}
               >
-                Смотреть отчёт →
+                {t('upload.done.viewReport')}
               </button>
               <button
                 onClick={() => { setStage('idle'); setFile(null); setTitle(''); setStudentName(''); }}
-                className="px-6 py-2 rounded text-sm border border-[#1e1e30] text-gray-500 hover:text-white transition-colors"
+                className="px-6 py-2 rounded text-sm border border-border text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Загрузить ещё
+                {t('upload.done.uploadMore')}
               </button>
             </div>
           </div>

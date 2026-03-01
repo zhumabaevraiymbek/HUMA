@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface User {
   id: string;
@@ -28,6 +30,9 @@ export default function UsersPage() {
   const [success, setSuccess] = useState('');
   const router = useRouter();
   const supabase = createClient();
+  const { lang, t } = useLanguage();
+
+  const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', kk: 'kk-KZ' };
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -65,7 +70,7 @@ export default function UsersPage() {
 
   const handleCreateUser = async () => {
     if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setError('Заполните все поля');
+      setError(t('users.error.fillAll'));
       return;
     }
     setSaving(true);
@@ -87,12 +92,12 @@ export default function UsersPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || 'Ошибка при создании');
+      setError(data.error || t('users.error.create'));
       setSaving(false);
       return;
     }
 
-    setSuccess(`${fullName} успешно добавлен!`);
+    setSuccess(t('users.success.added', { name: fullName }));
     setFullName(''); setEmail(''); setPassword(''); setRole('teacher');
     setShowForm(false);
     setSaving(false);
@@ -105,97 +110,94 @@ export default function UsersPage() {
     student: '#94a3b8',
   };
 
-  const roleLabels: Record<string, string> = {
-    admin: 'Администратор',
-    teacher: 'Преподаватель',
-    student: 'Студент',
-  };
-
   const filtered = filter === 'all' ? users : users.filter(u => u.role === filter);
 
   if (loading) {
     return (
       <div className="min-h-screen grid-bg flex items-center justify-center">
-        <div className="text-amber-400 text-sm animate-pulse">Загрузка...</div>
+        <div className="text-amber-400 text-sm animate-pulse">{t('common.loading')}</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen grid-bg">
-      <header className="border-b border-[#1e1e30] px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => router.push('/dashboard')} className="text-gray-600 hover:text-amber-400 transition-colors text-sm">
-              ← Назад
+              {t('nav.back')}
             </button>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
                 <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
               </div>
-              <span className="font-display text-xl tracking-[0.15em] text-white">VERIDOC</span>
+              <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
             </div>
           </div>
-          <button
-            onClick={() => { setShowForm(!showForm); setError(''); setSuccess(''); }}
-            className="text-xs px-4 py-2 rounded transition-all"
-            style={{ background: '#f59e0b', color: '#080810', fontWeight: 600 }}
-          >
-            + Добавить пользователя
-          </button>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <button
+              onClick={() => { setShowForm(!showForm); setError(''); setSuccess(''); }}
+              className="text-xs px-4 py-2 rounded transition-all"
+              style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)', fontWeight: 600 }}
+            >
+              {t('users.addBtn')}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">Управление</p>
-          <h1 className="font-display text-4xl text-white">Пользователи</h1>
+          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">{t('users.subtitle')}</p>
+          <h1 className="font-display text-4xl text-gray-900">{t('users.heading')}</h1>
         </div>
 
         {/* Add user form */}
         {showForm && (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6 mb-8 animate-fade-in-up">
-            <p className="text-sm text-white font-semibold mb-4">Новый пользователь</p>
+          <div className="rounded-lg border border-border bg-surface p-6 mb-8 animate-fade-in-up">
+            <p className="text-sm text-gray-900 font-semibold mb-4">{t('users.formTitle')}</p>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Полное имя *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('users.labelFullName')}</label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Иван Иванов"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Email *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('users.labelEmail')}</label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ivan@university.kz"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Пароль *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('users.labelPassword')}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">Роль *</label>
+                <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">{t('users.labelRole')}</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as 'admin' | 'teacher' | 'student')}
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 >
 {profile?.role === 'superadmin' && (
-  <option value="admin">Администратор</option>)}
-<option value="teacher">Преподаватель</option>
-<option value="student">Студент</option>
+  <option value="admin">{t('role.admin')}</option>)}
+<option value="teacher">{t('role.teacher')}</option>
+<option value="student">{t('role.student')}</option>
                 </select>
               </div>
             </div>
@@ -216,15 +218,15 @@ export default function UsersPage() {
                 onClick={handleCreateUser}
                 disabled={saving}
                 className="px-6 py-2 rounded text-sm font-semibold"
-                style={{ background: '#f59e0b', color: '#080810' }}
+                style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)' }}
               >
-                {saving ? 'Создаём...' : 'Создать'}
+                {saving ? t('common.creating') : t('common.create')}
               </button>
               <button
                 onClick={() => { setShowForm(false); setError(''); }}
-                className="px-6 py-2 rounded text-sm border border-[#1e1e30] text-gray-500 hover:text-white transition-colors"
+                className="px-6 py-2 rounded text-sm border border-border text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Отмена
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -233,13 +235,13 @@ export default function UsersPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Администраторов', value: users.filter(u => u.role === 'admin').length, color: '#818cf8' },
-            { label: 'Преподавателей', value: users.filter(u => u.role === 'teacher').length, color: '#34d399' },
-            { label: 'Студентов', value: users.filter(u => u.role === 'student').length, color: '#94a3b8' },
+            { labelKey: 'users.stat.admins', value: users.filter(u => u.role === 'admin').length, color: '#818cf8' },
+            { labelKey: 'users.stat.teachers', value: users.filter(u => u.role === 'teacher').length, color: '#34d399' },
+            { labelKey: 'users.stat.students', value: users.filter(u => u.role === 'student').length, color: '#94a3b8' },
           ].map(stat => (
-            <div key={stat.label} className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5">
+            <div key={stat.labelKey} className="rounded-lg border border-border bg-surface p-5">
               <p className="text-2xl font-semibold mb-1" style={{ color: stat.color }}>{stat.value}</p>
-              <p className="text-xs text-gray-600 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-xs text-gray-600 uppercase tracking-widest">{t(stat.labelKey)}</p>
             </div>
           ))}
         </div>
@@ -252,27 +254,27 @@ export default function UsersPage() {
               onClick={() => setFilter(f)}
               className="px-3 py-1.5 text-xs rounded border transition-all"
               style={{
-                background: filter === f ? '#f59e0b' : 'transparent',
-                color: filter === f ? '#080810' : '#6b7280',
-                borderColor: filter === f ? '#f59e0b' : '#1e1e30',
+                background: filter === f ? 'var(--color-accent, #f59e0b)' : 'transparent',
+                color: filter === f ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
+                borderColor: filter === f ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
                 fontWeight: filter === f ? 600 : 400,
               }}
             >
-              {f === 'all' ? 'Все' : roleLabels[f]}
+              {f === 'all' ? t('users.filter.all') : t(`role.${f}`)}
             </button>
           ))}
-          <span className="text-xs text-gray-600 ml-2">{filtered.length} пользователей</span>
+          <span className="text-xs text-gray-600 ml-2">{t('users.count', { count: filtered.length })}</span>
         </div>
 
         {/* Users list */}
         {filtered.length === 0 ? (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-12 text-center">
-            <p className="text-gray-600 text-sm">Нет пользователей</p>
+          <div className="rounded-lg border border-border bg-surface p-12 text-center">
+            <p className="text-gray-600 text-sm">{t('users.empty')}</p>
           </div>
         ) : (
           <div className="space-y-2">
             {filtered.map(user => (
-              <div key={user.id} className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-4 flex items-center justify-between hover:border-amber-500/20 transition-all">
+              <div key={user.id} className="rounded-lg border border-border bg-surface p-4 flex items-center justify-between hover:border-amber-500/20 transition-all">
                 <div className="flex items-center gap-4">
                   <div
                     className="w-9 h-9 rounded-full border flex items-center justify-center text-sm font-semibold shrink-0"
@@ -285,12 +287,12 @@ export default function UsersPage() {
                     {user.full_name?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-semibold">{user.full_name}</p>
+                    <p className="text-gray-900 text-sm font-semibold">{user.full_name}</p>
                     <p className="text-gray-600 text-xs mt-0.5">
                       {user.universities?.name && (
                         <span className="text-amber-500/70">{user.universities.name} · </span>
                       )}
-                      {new Date(user.created_at).toLocaleDateString('ru-RU')}
+                      {new Date(user.created_at).toLocaleDateString(localeMap[lang])}
                     </p>
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function UsersPage() {
                     background: roleColors[user.role] + '10',
                   }}
                 >
-                  {roleLabels[user.role]}
+                  {t(`role.${user.role}`)}
                 </span>
               </div>
             ))}

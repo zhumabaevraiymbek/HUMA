@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface University {
   id: string;
@@ -22,6 +24,9 @@ export default function UniversitiesPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const supabase = createClient();
+  const { lang, t } = useLanguage();
+
+  const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', kk: 'kk-KZ' };
 
   const loadUniversities = async () => {
     const { data } = await supabase
@@ -37,7 +42,7 @@ export default function UniversitiesPage() {
   }, []);
 
   const handleCreate = async () => {
-    if (!name.trim()) { setError('Введите название университета'); return; }
+    if (!name.trim()) { setError(t('uni.error.nameRequired')); return; }
     setSaving(true);
     setError('');
 
@@ -61,63 +66,66 @@ export default function UniversitiesPage() {
   return (
     <div className="min-h-screen grid-bg">
       {/* Header */}
-      <header className="border-b border-[#1e1e30] px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
               className="text-gray-600 hover:text-amber-400 transition-colors text-sm"
             >
-              ← Назад
+              {t('nav.back')}
             </button>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
                 <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
               </div>
-              <span className="font-display text-xl tracking-[0.15em] text-white">VERIDOC</span>
+              <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
             </div>
           </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="text-xs px-4 py-2 rounded transition-all"
-            style={{ background: '#f59e0b', color: '#080810', fontWeight: 600 }}
-          >
-            + Добавить университет
-          </button>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="text-xs px-4 py-2 rounded transition-all"
+              style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)', fontWeight: 600 }}
+            >
+              {t('uni.addBtn')}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">Управление</p>
-          <h1 className="font-display text-4xl text-white">Университеты</h1>
+          <p className="text-xs tracking-[0.4em] text-amber-500 uppercase mb-2">{t('uni.subtitle')}</p>
+          <h1 className="font-display text-4xl text-gray-900">{t('uni.heading')}</h1>
         </div>
 
         {/* Add form */}
         {showForm && (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6 mb-8 animate-fade-in-up">
-            <p className="text-sm text-white font-semibold mb-4">Новый университет</p>
+          <div className="rounded-lg border border-border bg-surface p-6 mb-8 animate-fade-in-up">
+            <p className="text-sm text-gray-900 font-semibold mb-4">{t('uni.formTitle')}</p>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">
-                  Название *
+                  {t('uni.labelName')}
                 </label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Нархоз Университет"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
               <div>
                 <label className="text-xs text-gray-500 uppercase tracking-widest mb-2 block">
-                  Домен email
+                  {t('uni.labelDomain')}
                 </label>
                 <input
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   placeholder="narxoz.kz"
-                  className="w-full bg-[#080810] border border-[#1e1e30] rounded px-4 py-3 text-sm text-gray-300 placeholder-gray-700 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
+                  className="w-full bg-input border border-border rounded px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-amber-500/40 transition-colors font-mono"
                 />
               </div>
             </div>
@@ -133,15 +141,15 @@ export default function UniversitiesPage() {
                 onClick={handleCreate}
                 disabled={saving}
                 className="px-6 py-2 rounded text-sm font-semibold transition-all"
-                style={{ background: '#f59e0b', color: '#080810' }}
+                style={{ background: 'var(--color-accent, #f59e0b)', color: 'var(--color-text, #111827)' }}
               >
-                {saving ? 'Сохраняем...' : 'Создать'}
+                {saving ? t('common.saving') : t('common.create')}
               </button>
               <button
                 onClick={() => { setShowForm(false); setError(''); }}
-                className="px-6 py-2 rounded text-sm border border-[#1e1e30] text-gray-500 hover:text-white transition-colors"
+                className="px-6 py-2 rounded text-sm border border-border text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Отмена
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -149,28 +157,28 @@ export default function UniversitiesPage() {
 
         {/* Universities list */}
         {loading ? (
-          <div className="text-amber-400 text-sm animate-pulse">Загрузка...</div>
+          <div className="text-amber-400 text-sm animate-pulse">{t('common.loading')}</div>
         ) : universities.length === 0 ? (
-          <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-12 text-center">
-            <p className="text-gray-600 text-sm">Нет университетов. Добавьте первый!</p>
+          <div className="rounded-lg border border-border bg-surface p-12 text-center">
+            <p className="text-gray-600 text-sm">{t('uni.empty')}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {universities.map((uni) => (
               <div
                 key={uni.id}
-                className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5 flex items-center justify-between hover:border-amber-500/30 transition-all"
+                className="rounded-lg border border-border bg-surface p-5 flex items-center justify-between hover:border-amber-500/30 transition-all"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded border border-amber-500/20 bg-amber-500/10 flex items-center justify-center text-amber-400 font-display text-lg">
                     {uni.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-semibold">{uni.name}</p>
+                    <p className="text-gray-900 text-sm font-semibold">{uni.name}</p>
                     <p className="text-gray-600 text-xs mt-0.5">
-                      {uni.domain ? `@${uni.domain}` : 'Домен не указан'}
+                      {uni.domain ? `@${uni.domain}` : t('uni.noDomain')}
                       {' · '}
-                      {new Date(uni.created_at).toLocaleDateString('ru-RU')}
+                      {new Date(uni.created_at).toLocaleDateString(localeMap[lang])}
                     </p>
                   </div>
                 </div>
@@ -178,18 +186,18 @@ export default function UniversitiesPage() {
                   <span
                     className="text-[10px] px-2 py-1 rounded border"
                     style={{
-                      color: uni.is_active ? '#22c55e' : '#6b7280',
-                      borderColor: uni.is_active ? '#22c55e40' : '#1e1e30',
+                      color: uni.is_active ? '#22c55e' : 'var(--color-muted, #6b7280)',
+                      borderColor: uni.is_active ? '#22c55e40' : 'var(--color-border, #e5e7eb)',
                       background: uni.is_active ? '#22c55e10' : 'transparent',
                     }}
                   >
-                    {uni.is_active ? 'АКТИВЕН' : 'НЕАКТИВЕН'}
+                    {uni.is_active ? t('uni.active') : t('uni.inactive')}
                   </span>
                   <button
                     onClick={() => router.push(`/dashboard/universities/${uni.id}`)}
-                    className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-[#1e1e30] hover:border-amber-500/40 px-3 py-1.5 rounded"
+                    className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-border hover:border-amber-500/40 px-3 py-1.5 rounded"
                   >
-                    Управление →
+                    {t('uni.manageBtn')}
                   </button>
                 </div>
               </div>
