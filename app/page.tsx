@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  FileText, Upload, Globe, Sparkles, Zap, Shield,
+  CheckCircle2, AlertCircle, Loader2,
+} from 'lucide-react';
 
 type Lang = 'en' | 'ru' | 'kk';
 type InputMode = 'file' | 'text';
@@ -30,17 +35,19 @@ type Stage = 'idle' | 'uploading' | 'extracting' | 'analyzing' | 'done' | 'error
 
 const T = {
   en: {
-    tagline: 'Forensic Document Analysis',
-    title1: 'Detect AI-Generated',
-    title2: 'Content',
+    tagline: 'Trusted by Students Worldwide',
+    title1: 'Verify Your Work',
+    title2: 'Ensure Authenticity',
     subtitle: 'Upload a Word document or paste text. Our forensic engine analyses linguistic patterns to determine AI authorship with paragraph-level precision.',
     tab_file: 'Upload File',
     tab_text: 'Paste Text',
-    dropzone: 'Drop your document here',
+    dropzone: 'Drag and drop your file here',
     dropzone_sub: 'or click to browse — .docx, .doc supported',
     textarea_placeholder: 'Paste your text here (minimum 100 characters)...',
-    analyze_btn: 'Analyze Text',
-    feat1: '✓ Secure analysis', feat2: '✓ No file storage', feat3: '✓ Paragraph-level results',
+    analyze_btn: 'Analyze Content',
+    feat1_title: 'Lightning Fast', feat1_desc: 'Get results in seconds',
+    feat2_title: 'Highly Accurate', feat2_desc: 'Advanced AI detection',
+    feat3_title: 'Secure & Private', feat3_desc: 'Your data stays safe',
     analysing: 'Analysing',
     step1_label: 'Uploading document', step1_sub: 'Transferring file securely',
     step2_label: 'Extracting text content', step2_sub: 'Parsing .docx structure',
@@ -54,11 +61,12 @@ const T = {
     human: 'HUMAN', mixed: 'MIXED', ai: 'AI',
     online: 'SYSTEM ONLINE', footer: 'Powered by Claude · No data retained', dismiss: 'Dismiss',
     text_too_short: 'Text is too short. Please enter at least 100 characters.',
+    analyzing: 'Analyzing...',
   },
   ru: {
-    tagline: 'Криминалистический анализ документов',
-    title1: 'Определи AI-сгенерированный',
-    title2: 'Контент',
+    tagline: 'Проверяйте академическую честность',
+    title1: 'Проверь свою работу',
+    title2: 'Обеспечь подлинность',
     subtitle: 'Загрузи документ Word или вставь текст. Наш движок анализирует лингвистические паттерны для определения авторства ИИ на уровне абзацев.',
     tab_file: 'Загрузить файл',
     tab_text: 'Вставить текст',
@@ -66,7 +74,9 @@ const T = {
     dropzone_sub: 'или нажми для выбора — поддерживаются .docx, .doc',
     textarea_placeholder: 'Вставь текст здесь (минимум 100 символов)...',
     analyze_btn: 'Анализировать',
-    feat1: '✓ Безопасный анализ', feat2: '✓ Файлы не хранятся', feat3: '✓ Анализ по абзацам',
+    feat1_title: 'Молниеносно', feat1_desc: 'Результаты за секунды',
+    feat2_title: 'Высокая точность', feat2_desc: 'Продвинутое обнаружение AI',
+    feat3_title: 'Безопасно', feat3_desc: 'Ваши данные защищены',
     analysing: 'Анализируется',
     step1_label: 'Загрузка документа', step1_sub: 'Безопасная передача файла',
     step2_label: 'Извлечение текста', step2_sub: 'Разбор структуры .docx',
@@ -80,11 +90,12 @@ const T = {
     human: 'ЧЕЛОВЕК', mixed: 'СМЕШАНО', ai: 'ИИ',
     online: 'СИСТЕМА ОНЛАЙН', footer: 'Работает на Claude · Файлы не сохраняются', dismiss: 'Закрыть',
     text_too_short: 'Текст слишком короткий. Введите минимум 100 символов.',
+    analyzing: 'Анализ...',
   },
   kk: {
-    tagline: 'Сот-криминалистикалық құжат талдауы',
-    title1: 'AI жасаған контентті',
-    title2: 'Анықта',
+    tagline: 'Академиялық адалдықты тексеріңіз',
+    title1: 'Жұмысыңызды тексеріңіз',
+    title2: 'Шынайылықты қамтамасыз етіңіз',
     subtitle: 'Word құжатын жүктеңіз немесе мәтін қойыңыз. Біздің қозғалтқыш абзац деңгейінде AI авторлығын анықтау үшін лингвистикалық үлгілерді талдайды.',
     tab_file: 'Файл жүктеу',
     tab_text: 'Мәтін қою',
@@ -92,7 +103,9 @@ const T = {
     dropzone_sub: 'немесе шолу үшін басыңыз — .docx, .doc қолданылады',
     textarea_placeholder: 'Мәтінді осы жерге қойыңыз (кемінде 100 таңба)...',
     analyze_btn: 'Талдау',
-    feat1: '✓ Қауіпсіз талдау', feat2: '✓ Файлдар сақталмайды', feat3: '✓ Абзац деңгейіндегі нәтижелер',
+    feat1_title: 'Жылдам', feat1_desc: 'Секундтарда нәтиже',
+    feat2_title: 'Жоғары дәлдік', feat2_desc: 'Озық AI анықтау',
+    feat3_title: 'Қауіпсіз', feat3_desc: 'Деректеріңіз қорғалған',
     analysing: 'Талдануда',
     step1_label: 'Құжат жүктелуде', step1_sub: 'Файлды қауіпсіз тасымалдау',
     step2_label: 'Мәтін мазмұнын шығару', step2_sub: '.docx құрылымын талдау',
@@ -106,16 +119,24 @@ const T = {
     human: 'АДАМ', mixed: 'АРАЛАС', ai: 'AI',
     online: 'ЖҮЙЕ ОНЛАЙН', footer: 'Claude негізінде · Файлдар сақталмайды', dismiss: 'Жабу',
     text_too_short: 'Мәтін тым қысқа. Кемінде 100 таңба енгізіңіз.',
+    analyzing: 'Талдануда...',
   },
 };
 
+/* ─── Language selector ─────────────────────────────── */
 function LangSelector({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
   return (
-    <div className="flex items-center gap-1 border border-border rounded p-1">
+    <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-1 bg-white">
       {(['en', 'ru', 'kk'] as Lang[]).map(code => (
-        <button key={code} onClick={() => setLang(code)}
-          className="px-2 py-1 text-xs rounded transition-all uppercase"
-          style={{ background: lang === code ? 'var(--color-accent, #f59e0b)' : 'transparent', color: lang === code ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)', fontWeight: lang === code ? 600 : 400 }}>
+        <button
+          key={code}
+          onClick={() => setLang(code)}
+          className="px-2 py-1 text-xs rounded-md transition-all uppercase font-medium"
+          style={{
+            background: lang === code ? 'linear-gradient(to right, #2563eb, #4f46e5)' : 'transparent',
+            color: lang === code ? '#fff' : '#6b7280',
+          }}
+        >
           {code}
         </button>
       ))}
@@ -123,6 +144,7 @@ function LangSelector({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
   );
 }
 
+/* ─── Score gauge ───────────────────────────────────── */
 function ScoreGauge({ score, verdict }: { score: number; verdict: string }) {
   const [displayScore, setDisplayScore] = useState(0);
   const radius = 90;
@@ -154,48 +176,57 @@ function ScoreGauge({ score, verdict }: { score: number; verdict: string }) {
             style={{ transition: 'stroke-dashoffset 0.1s ease, stroke 0.3s ease' }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-display text-6xl font-semibold amber-text-glow" style={{ color, lineHeight: 1 }}>{displayScore}</span>
+          <span className="font-display text-6xl font-semibold" style={{ color, lineHeight: 1 }}>{displayScore}</span>
           <span className="text-xs text-gray-500 mt-1 tracking-widest uppercase">% AI</span>
         </div>
       </div>
       <div className="mt-3 text-center">
-        <span className="font-display text-xl italic" style={{ color }}>{verdict}</span>
+        <span className="text-xl font-semibold italic" style={{ color }}>{verdict}</span>
       </div>
     </div>
   );
 }
 
+/* ─── Paragraph card ────────────────────────────────── */
 function ParagraphCard({ para, index, t }: { para: ParagraphResult; index: number; t: typeof T['en'] }) {
   const [open, setOpen] = useState(false);
   const flagColor = { human: '#22c55e', mixed: '#eab308', ai: '#ef4444' }[para.flag];
   const flagLabel = { human: t.human, mixed: t.mixed, ai: t.ai }[para.flag];
 
   return (
-    <div className="para-card rounded border border-border bg-surface p-4 cursor-pointer" onClick={() => setOpen(!open)}>
+    <div
+      className="rounded-xl border border-gray-200 bg-white p-4 cursor-pointer hover:border-indigo-300 hover:shadow-sm transition-all"
+      onClick={() => setOpen(!open)}
+    >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-xs text-gray-600 shrink-0 font-mono">P{String(index + 1).padStart(2, '0')}</span>
-          <p className="text-sm text-gray-400 truncate">{para.text.slice(0, 80)}…</p>
+          <span className="text-xs text-gray-500 shrink-0 font-mono">P{String(index + 1).padStart(2, '0')}</span>
+          <p className="text-sm text-gray-500 truncate">{para.text.slice(0, 80)}…</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-20 h-1.5 bg-border rounded-full overflow-hidden">
+          <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${para.score}%`, background: flagColor }} />
           </div>
           <span className="text-xs font-mono" style={{ color: flagColor, minWidth: 28 }}>{para.score}%</span>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border" style={{ color: flagColor, borderColor: flagColor + '40', background: flagColor + '10' }}>{flagLabel}</span>
-          <span className="text-gray-600 text-xs">{open ? '▲' : '▼'}</span>
+          <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
         </div>
       </div>
       {open && (
-        <div className="mt-4 space-y-3 animate-fade-in-up">
-          <p className="text-sm text-gray-700 leading-relaxed border-l-2 border-border pl-3">{para.text}</p>
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="mt-4 space-y-3 overflow-hidden"
+        >
+          <p className="text-sm text-gray-700 leading-relaxed border-l-2 border-indigo-200 pl-3">{para.text}</p>
           <p className="text-xs text-gray-500 italic">↳ {para.reasoning}</p>
-        </div>
+        </motion.div>
       )}
     </div>
   );
 }
 
+/* ─── Analysis loader ───────────────────────────────── */
 function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: typeof T['en'] }) {
   const STEPS = mode === 'text'
     ? [
@@ -211,12 +242,9 @@ function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: 
   const currentIdx = STEPS.findIndex(s => s.key === stage);
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-        <div className="absolute inset-0 rounded-full border border-amber-500/20 animate-ping" />
-        <div className="absolute rounded-full border border-amber-500/30" style={{ inset: 8, animation: 'spin 3s linear infinite' }} />
-        <div className="absolute rounded-full border-t border-amber-500" style={{ inset: 16, animation: 'spin 1.5s linear infinite' }} />
-        <div className="text-amber-400 text-2xl">⬡</div>
+    <div className="flex flex-col items-center gap-8 py-4">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+        <Loader2 className="w-10 h-10 text-white animate-spin" />
       </div>
       <div className="w-full max-w-xs space-y-4">
         {STEPS.map((step, i) => {
@@ -224,15 +252,21 @@ function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: 
           const active = i === currentIdx;
           return (
             <div key={step.key} className="flex items-start gap-3">
-              <div className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-[10px]"
-                style={{ borderColor: done ? '#22c55e' : active ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)', background: done ? '#22c55e15' : active ? '#f59e0b15' : 'transparent', color: done ? '#22c55e' : active ? 'var(--color-accent, #f59e0b)' : '#374151' }}>
+              <div
+                className="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-[10px]"
+                style={{
+                  borderColor: done ? '#22c55e' : active ? '#4f46e5' : '#e5e7eb',
+                  background: done ? '#22c55e15' : active ? '#4f46e515' : 'transparent',
+                  color: done ? '#22c55e' : active ? '#4f46e5' : '#9ca3af',
+                }}
+              >
                 {done ? '✓' : active ? '◉' : '○'}
               </div>
               <div>
-                <p className="text-sm" style={{ color: done ? 'var(--color-muted, #6b7280)' : active ? 'var(--color-text, #111827)' : '#374151' }}>
-                  {step.label}{active && <span className="cursor-blink ml-0.5 text-amber-400">_</span>}
+                <p className="text-sm font-medium" style={{ color: done ? '#9ca3af' : active ? '#111827' : '#6b7280' }}>
+                  {step.label}{active && <span className="ml-1 text-indigo-500 animate-pulse">_</span>}
                 </p>
-                {active && <p className="text-xs text-gray-600 mt-0.5">{step.sub}</p>}
+                {active && <p className="text-xs text-gray-500 mt-0.5">{step.sub}</p>}
               </div>
             </div>
           );
@@ -242,6 +276,7 @@ function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: 
   );
 }
 
+/* ─── Main page ─────────────────────────────────────── */
 export default function Home() {
   const [lang, setLang] = useState<Lang>('en');
   const [inputMode, setInputMode] = useState<InputMode>('file');
@@ -317,159 +352,243 @@ export default function Home() {
   const isLoading = ['uploading', 'extracting', 'analyzing'].includes(stage);
 
   return (
-    <div className="min-h-screen grid-bg">
-      <header className="border-b border-border px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
-              <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Subtle grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none" />
+
+      {/* Decorative blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
+      {/* Header */}
+      <header className="relative sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+              <FileText className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <LangSelector lang={lang} setLang={setLang} />
+            <div>
+              <h1 className="font-bold text-lg text-gray-900 tracking-tight">VERIDOC</h1>
+              <p className="text-xs text-gray-500">AI Content Detection</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-gray-400" />
+              <LangSelector lang={lang} setLang={setLang} />
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs text-gray-500">{t.online}</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-16">
-        <div className="text-center mb-16">
-          <p className="text-xs tracking-[0.4em] text-amber-500 mb-4 uppercase">{t.tagline}</p>
-          <h1 className="font-display text-5xl md:text-6xl font-semibold text-gray-900 mb-6 leading-tight">
-            {t.title1}<br /><span className="italic text-amber-400">{t.title2}</span>
-          </h1>
-          <p className="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">{t.subtitle}</p>
-        </div>
+      {/* Main */}
+      <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        <div className="rounded-lg border border-border bg-surface p-8 mb-8 amber-glow">
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 border border-blue-200 rounded-full mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-700 font-medium">{t.tagline}</span>
+          </motion.div>
+
+          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4 tracking-tight">
+            {t.title1}
+            <br />
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              {t.title2}
+            </span>
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">{t.subtitle}</p>
+        </motion.div>
+
+        {/* Upload card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white shadow-xl border border-gray-200 rounded-2xl p-8 mb-8"
+        >
           {stage === 'idle' || stage === 'error' ? (
             <>
-              {/* Tab switcher */}
-              <div className="flex gap-1 mb-6 border border-border rounded-lg p-1 w-fit">
+              {/* Tabs */}
+              <div className="flex gap-2 mb-8 p-1.5 bg-gray-100 rounded-xl">
                 {(['file', 'text'] as InputMode[]).map(mode => (
                   <button
                     key={mode}
                     onClick={() => { setInputMode(mode); setError(''); }}
-                    className="px-4 py-2 text-sm rounded-md transition-all"
+                    className="flex-1 py-3 px-6 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm"
                     style={{
-                      background: inputMode === mode ? 'var(--color-accent, #f59e0b)' : 'transparent',
-                      color: inputMode === mode ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
-                      fontWeight: inputMode === mode ? 600 : 400,
+                      background: inputMode === mode ? '#fff' : 'transparent',
+                      color: inputMode === mode ? '#4f46e5' : '#6b7280',
+                      boxShadow: inputMode === mode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                     }}
                   >
-                    {mode === 'file' ? `⬡ ${t.tab_file}` : `✎ ${t.tab_text}`}
+                    {mode === 'file' ? <Upload className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                    {mode === 'file' ? t.tab_file : t.tab_text}
                   </button>
                 ))}
               </div>
 
-              {/* File upload */}
-              {inputMode === 'file' && (
-                <div
-                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-border hover:border-amber-500/40'}`}
-                  onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                  onDragLeave={() => setDragActive(false)}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input ref={fileInputRef} type="file" accept=".docx,.doc" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 border border-border rounded-lg flex items-center justify-center text-3xl text-gray-600">⬡</div>
-                    <div>
-                      <p className="text-gray-900 mb-1">{t.dropzone}</p>
-                      <p className="text-gray-600 text-sm">{t.dropzone_sub}</p>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-700">
-                      <span>{t.feat1}</span><span>{t.feat2}</span><span>{t.feat3}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Text input */}
-              {inputMode === 'text' && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <textarea
-                      value={pastedText}
-                      onChange={(e) => setPastedText(e.target.value)}
-                      placeholder={t.textarea_placeholder}
-                      className="w-full h-64 bg-input border border-border rounded-lg p-4 text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:border-amber-500/40 transition-colors font-mono leading-relaxed"
-                    />
-                    <div className="absolute bottom-3 right-3 text-xs text-gray-700">
-                      {pastedText.length} chars
-                    </div>
-                  </div>
-                  <button
-                    onClick={analyzeText}
-                    disabled={pastedText.trim().length < 100}
-                    className="w-full py-3 rounded-lg text-sm font-semibold transition-all"
-                    style={{
-                      background: pastedText.trim().length >= 100 ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
-                      color: pastedText.trim().length >= 100 ? 'var(--color-text, #111827)' : '#374151',
-                      cursor: pastedText.trim().length >= 100 ? 'pointer' : 'not-allowed',
-                    }}
+              <AnimatePresence mode="wait">
+                {inputMode === 'file' ? (
+                  <motion.div
+                    key="file"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {t.analyze_btn} →
-                  </button>
+                    <div
+                      className={`rounded-2xl border-2 border-dashed p-16 text-center cursor-pointer transition-all duration-200 ${
+                        dragActive ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50/50'
+                      }`}
+                      onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                      onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                      onDragLeave={() => setDragActive(false)}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <input ref={fileInputRef} type="file" accept=".docx,.doc" className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+                      <Upload className={`w-16 h-16 mx-auto mb-4 transition-colors ${dragActive ? 'text-indigo-500' : 'text-gray-400'}`} />
+                      <p className="text-gray-700 text-lg mb-2">{t.dropzone}</p>
+                      <p className="text-gray-500 text-sm mb-6">{t.dropzone_sub}</p>
+                      <div className="inline-flex px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md">
+                        Choose File
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="text"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="relative mb-6">
+                      <textarea
+                        value={pastedText}
+                        onChange={(e) => setPastedText(e.target.value)}
+                        placeholder={t.textarea_placeholder}
+                        className="w-full h-64 bg-gray-50 border border-gray-300 rounded-xl p-4 text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono leading-relaxed"
+                      />
+                      <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                        {pastedText.length} chars
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Error */}
+              {stage === 'error' && (
+                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-red-600 text-sm flex-1">{error}</p>
+                  <button onClick={reset} className="text-xs text-gray-500 hover:text-gray-900 transition-colors">{t.dismiss}</button>
                 </div>
               )}
 
-              {stage === 'error' && (
-                <div className="mt-4 rounded border border-red-500/30 bg-red-500/5 p-4 flex items-start gap-3 animate-fade-in-up">
-                  <span className="text-red-400 shrink-0">⚠</span>
-                  <p className="text-red-400 text-sm flex-1">{error}</p>
-                  <button onClick={reset} className="text-xs text-gray-600 hover:text-gray-900 transition-colors">{t.dismiss}</button>
-                </div>
-              )}
+              {/* Analyze button */}
+              <button
+                onClick={inputMode === 'text' ? analyzeText : undefined}
+                disabled={inputMode === 'text' && pastedText.trim().length < 100}
+                className="w-full py-5 rounded-xl text-base font-semibold transition-all text-white shadow-lg"
+                style={{
+                  background: (inputMode === 'file' || pastedText.trim().length >= 100)
+                    ? 'linear-gradient(to right, #2563eb, #4f46e5)'
+                    : '#e5e7eb',
+                  color: (inputMode === 'file' || pastedText.trim().length >= 100) ? '#fff' : '#9ca3af',
+                  cursor: (inputMode === 'file' || pastedText.trim().length >= 100) ? 'pointer' : 'not-allowed',
+                }}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  {t.analyze_btn}
+                </span>
+              </button>
             </>
           ) : isLoading ? (
-            <div className="py-8">
-              <p className="text-center text-xs text-gray-600 mb-8 tracking-widest uppercase">
-                {t.analysing}: <span className="text-amber-500">{fileName}</span>
+            <div className="py-4">
+              <p className="text-center text-xs text-gray-500 mb-8 tracking-widest uppercase">
+                {t.analysing}: <span className="text-indigo-600 font-medium">{fileName}</span>
               </p>
               <AnalysisLoader stage={stage} mode={inputMode} t={t} />
             </div>
           ) : null}
-        </div>
+        </motion.div>
 
+        {/* Results */}
         {stage === 'done' && result && (
-          <div ref={resultsRef} className="space-y-6 animate-fade-in-up">
+          <motion.div
+            ref={resultsRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6 mb-12"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-600 tracking-widest uppercase mb-1">{t.analysis_complete}</p>
-                <p className="text-sm text-gray-400">
-                  <span className="text-amber-500">{result.file_name}</span>
+                <p className="text-xs text-gray-500 tracking-widest uppercase mb-1">{t.analysis_complete}</p>
+                <p className="text-sm text-gray-600">
+                  <span className="text-indigo-600 font-medium">{result.file_name}</span>
                   {' · '}{result.word_count?.toLocaleString() || '—'} {t.words}
                   {' · '}{result.total_paragraphs} {t.paragraphs}
                   {result.truncated && <span className="text-yellow-600"> · {t.truncated}</span>}
                 </p>
               </div>
-              <button onClick={reset} className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-border hover:border-amber-500/40 px-4 py-2 rounded">
+              <button
+                onClick={reset}
+                className="text-xs text-gray-600 hover:text-indigo-600 transition-colors border border-gray-300 hover:border-indigo-400 px-4 py-2 rounded-lg"
+              >
                 {t.new_analysis}
               </button>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-1 rounded-lg border border-border bg-surface p-6 flex items-center justify-center amber-glow">
+              <div className="md:col-span-1 rounded-2xl border border-gray-200 bg-white p-6 flex items-center justify-center shadow-sm">
                 <ScoreGauge score={result.overall_score} verdict={result.verdict} />
               </div>
               <div className="md:col-span-2 space-y-4">
-                <div className="rounded-lg border border-border bg-surface p-5">
-                  <p className="text-xs text-gray-600 tracking-widest uppercase mb-2">{t.summary_label}</p>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs text-gray-500 tracking-widest uppercase mb-2">{t.summary_label}</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{result.summary}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: t.ai_score, value: `${result.overall_score}%`, color: result.overall_score > 60 ? '#ef4444' : result.overall_score > 35 ? '#eab308' : '#22c55e' },
-                    { label: t.confidence, value: result.confidence, color: 'var(--color-text, #111827)' },
-                    { label: t.verdict, value: result.verdict, color: 'var(--color-accent, #f59e0b)' },
+                    { label: t.confidence, value: result.confidence, color: '#111827' },
+                    { label: t.verdict, value: result.verdict, color: '#4f46e5' },
                   ].map(stat => (
-                    <div key={stat.label} className="rounded border border-border bg-surface p-3 text-center">
-                      <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1">{stat.label}</p>
+                    <div key={stat.label} className="rounded-xl border border-gray-200 bg-white p-3 text-center shadow-sm">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{stat.label}</p>
                       <p className="text-sm font-semibold" style={{ color: stat.color }}>{stat.value}</p>
                     </div>
                   ))}
@@ -477,19 +596,19 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-surface p-5">
-              <p className="text-xs text-gray-600 tracking-widest uppercase mb-3">{t.indicators}</p>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <p className="text-xs text-gray-500 tracking-widest uppercase mb-3">{t.indicators}</p>
               <div className="flex flex-wrap gap-2">
                 {result.key_indicators.map((ind, i) => (
-                  <span key={i} className="text-xs px-3 py-1.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-600">{ind}</span>
+                  <span key={i} className="text-xs px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700">{ind}</span>
                 ))}
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-600 tracking-widest uppercase">{t.breakdown}</p>
-                <div className="flex items-center gap-4 text-[10px] text-gray-600">
+                <p className="text-xs text-gray-500 tracking-widest uppercase">{t.breakdown}</p>
+                <div className="flex items-center gap-4 text-[10px] text-gray-500">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> {t.human}</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> {t.mixed}</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> {t.ai}</span>
@@ -501,12 +620,36 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+
+        {/* Feature cards */}
+        <div className="grid md:grid-cols-3 gap-6 mt-4">
+          {[
+            { icon: Zap, title: t.feat1_title, desc: t.feat1_desc, from: 'from-blue-100', to: 'to-blue-200', color: 'text-blue-600', delay: 0.3 },
+            { icon: Sparkles, title: t.feat2_title, desc: t.feat2_desc, from: 'from-indigo-100', to: 'to-indigo-200', color: 'text-indigo-600', delay: 0.4 },
+            { icon: Shield, title: t.feat3_title, desc: t.feat3_desc, from: 'from-purple-100', to: 'to-purple-200', color: 'text-purple-600', delay: 0.5 },
+          ].map(({ icon: Icon, title, desc, from, to, color, delay }) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay }}
+              className="bg-white border border-gray-200 rounded-2xl p-8 text-center hover:shadow-xl transition-all group"
+            >
+              <div className={`w-16 h-16 bg-gradient-to-br ${from} ${to} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                <Icon className={`w-8 h-8 ${color}`} />
+              </div>
+              <h3 className="font-bold text-lg mb-2 text-gray-900">{title}</h3>
+              <p className="text-sm text-gray-600">{desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </main>
 
-      <footer className="border-t border-border px-6 py-6 mt-16">
-        <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-gray-700">
+      {/* Footer */}
+      <footer className="relative border-t border-gray-200 px-6 py-6 mt-16 bg-white/60 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-500">
           <span>VERIDOC · AI Content Forensics</span>
           <span>{t.footer}</span>
         </div>
