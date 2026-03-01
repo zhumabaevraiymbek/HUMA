@@ -6,6 +6,15 @@
 :root {
   --font-mono: 'JetBrains Mono', monospace;
   --font-display: 'Cormorant Garamond', serif;
+
+  /* Design tokens — меняй только здесь для смены темы */
+  --color-bg:      #f5f5f5;
+  --color-surface: #ffffff;
+  --color-border:  #e5e7eb;
+  --color-input:   #f9fafb;
+  --color-text:    #111827;
+  --color-muted:   #6b7280;
+  --color-accent:  #f59e0b;
 }
 
 * {
@@ -13,8 +22,8 @@
 }
 
 body {
-  background-color: #080810;
-  color: #e2e2f0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-mono);
   min-height: 100vh;
   overflow-x: hidden;
@@ -25,17 +34,17 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1000;
-  opacity: 0.4;
+  opacity: 0.15;
 }
 
 /* Grid background */
 .grid-bg {
-  background-image: 
-    linear-gradient(rgba(251, 191, 36, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(251, 191, 36, 0.03) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -97,9 +106,9 @@ body::before {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #080810; }
-::-webkit-scrollbar-thumb { background: #1e1e30; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #f59e0b40; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
 /* Gauge circle animation */
 .gauge-circle {
@@ -111,7 +120,7 @@ body::before {
 /* Drop zone */
 .drop-zone-active {
   border-color: #f59e0b !important;
-  background: rgba(245, 158, 11, 0.05) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
 }
 
 /* Paragraph card hover */
@@ -127,7 +136,7 @@ body::before {
 
 /* Amber glow */
 .amber-glow {
-  box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), 0 0 80px rgba(245, 158, 11, 0.05);
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.12), 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
 .amber-text-glow {

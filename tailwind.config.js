@@ -11,9 +11,13 @@ module.exports = {
         display: ['var(--font-display)', 'serif'],
       },
       colors: {
-        bg: '#080810',
-        surface: '#0f0f1a',
-        border: '#1e1e30',
+        bg:      'var(--color-bg)',
+        surface: 'var(--color-surface)',
+        border:  'var(--color-border)',
+        input:   'var(--color-input)',
+        text:    'var(--color-text)',
+        muted:   'var(--color-muted)',
+        accent:  'var(--color-accent)',
         amber: {
           400: '#fbbf24',
           500: '#f59e0b',
