@@ -111,11 +111,11 @@ const T = {
 
 function LangSelector({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
   return (
-    <div className="flex items-center gap-1 border border-[#1e1e30] rounded p-1">
+    <div className="flex items-center gap-1 border border-border rounded p-1">
       {(['en', 'ru', 'kk'] as Lang[]).map(code => (
         <button key={code} onClick={() => setLang(code)}
           className="px-2 py-1 text-xs rounded transition-all uppercase"
-          style={{ background: lang === code ? '#f59e0b' : 'transparent', color: lang === code ? '#080810' : '#6b7280', fontWeight: lang === code ? 600 : 400 }}>
+          style={{ background: lang === code ? 'var(--color-accent, #f59e0b)' : 'transparent', color: lang === code ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)', fontWeight: lang === code ? 600 : 400 }}>
           {code}
         </button>
       ))}
@@ -148,7 +148,7 @@ function ScoreGauge({ score, verdict }: { score: number; verdict: string }) {
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: 220, height: 220 }}>
         <svg width="220" height="220" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="110" cy="110" r={radius} fill="none" stroke="#1e1e30" strokeWidth="12" />
+          <circle cx="110" cy="110" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="12" />
           <circle cx="110" cy="110" r={radius} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round"
             strokeDasharray={circumference} strokeDashoffset={offset}
             style={{ transition: 'stroke-dashoffset 0.1s ease, stroke 0.3s ease' }} />
@@ -171,14 +171,14 @@ function ParagraphCard({ para, index, t }: { para: ParagraphResult; index: numbe
   const flagLabel = { human: t.human, mixed: t.mixed, ai: t.ai }[para.flag];
 
   return (
-    <div className="para-card rounded border border-[#1e1e30] bg-[#0f0f1a] p-4 cursor-pointer" onClick={() => setOpen(!open)}>
+    <div className="para-card rounded border border-border bg-surface p-4 cursor-pointer" onClick={() => setOpen(!open)}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-xs text-gray-600 shrink-0 font-mono">P{String(index + 1).padStart(2, '0')}</span>
           <p className="text-sm text-gray-400 truncate">{para.text.slice(0, 80)}…</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-20 h-1.5 bg-[#1e1e30] rounded-full overflow-hidden">
+          <div className="w-20 h-1.5 bg-border rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${para.score}%`, background: flagColor }} />
           </div>
           <span className="text-xs font-mono" style={{ color: flagColor, minWidth: 28 }}>{para.score}%</span>
@@ -188,7 +188,7 @@ function ParagraphCard({ para, index, t }: { para: ParagraphResult; index: numbe
       </div>
       {open && (
         <div className="mt-4 space-y-3 animate-fade-in-up">
-          <p className="text-sm text-gray-300 leading-relaxed border-l-2 border-[#1e1e30] pl-3">{para.text}</p>
+          <p className="text-sm text-gray-700 leading-relaxed border-l-2 border-border pl-3">{para.text}</p>
           <p className="text-xs text-gray-500 italic">↳ {para.reasoning}</p>
         </div>
       )}
@@ -225,11 +225,11 @@ function AnalysisLoader({ stage, mode, t }: { stage: Stage; mode: InputMode; t: 
           return (
             <div key={step.key} className="flex items-start gap-3">
               <div className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-[10px]"
-                style={{ borderColor: done ? '#22c55e' : active ? '#f59e0b' : '#1e1e30', background: done ? '#22c55e15' : active ? '#f59e0b15' : 'transparent', color: done ? '#22c55e' : active ? '#f59e0b' : '#374151' }}>
+                style={{ borderColor: done ? '#22c55e' : active ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)', background: done ? '#22c55e15' : active ? '#f59e0b15' : 'transparent', color: done ? '#22c55e' : active ? 'var(--color-accent, #f59e0b)' : '#374151' }}>
                 {done ? '✓' : active ? '◉' : '○'}
               </div>
               <div>
-                <p className="text-sm" style={{ color: done ? '#6b7280' : active ? '#e2e2f0' : '#374151' }}>
+                <p className="text-sm" style={{ color: done ? 'var(--color-muted, #6b7280)' : active ? 'var(--color-text, #111827)' : '#374151' }}>
                   {step.label}{active && <span className="cursor-blink ml-0.5 text-amber-400">_</span>}
                 </p>
                 {active && <p className="text-xs text-gray-600 mt-0.5">{step.sub}</p>}
@@ -318,13 +318,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen grid-bg">
-      <header className="border-b border-[#1e1e30] px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 border border-amber-500/60 rotate-45 flex items-center justify-center">
               <div className="w-2 h-2 bg-amber-500 rotate-[-45deg]" />
             </div>
-            <span className="font-display text-xl tracking-[0.15em] text-white">VERIDOC</span>
+            <span className="font-display text-xl tracking-[0.15em] text-gray-900">VERIDOC</span>
           </div>
           <div className="flex items-center gap-4">
             <LangSelector lang={lang} setLang={setLang} />
@@ -339,25 +339,25 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
           <p className="text-xs tracking-[0.4em] text-amber-500 mb-4 uppercase">{t.tagline}</p>
-          <h1 className="font-display text-5xl md:text-6xl font-semibold text-white mb-6 leading-tight">
+          <h1 className="font-display text-5xl md:text-6xl font-semibold text-gray-900 mb-6 leading-tight">
             {t.title1}<br /><span className="italic text-amber-400">{t.title2}</span>
           </h1>
           <p className="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">{t.subtitle}</p>
         </div>
 
-        <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-8 mb-8 amber-glow">
+        <div className="rounded-lg border border-border bg-surface p-8 mb-8 amber-glow">
           {stage === 'idle' || stage === 'error' ? (
             <>
               {/* Tab switcher */}
-              <div className="flex gap-1 mb-6 border border-[#1e1e30] rounded-lg p-1 w-fit">
+              <div className="flex gap-1 mb-6 border border-border rounded-lg p-1 w-fit">
                 {(['file', 'text'] as InputMode[]).map(mode => (
                   <button
                     key={mode}
                     onClick={() => { setInputMode(mode); setError(''); }}
                     className="px-4 py-2 text-sm rounded-md transition-all"
                     style={{
-                      background: inputMode === mode ? '#f59e0b' : 'transparent',
-                      color: inputMode === mode ? '#080810' : '#6b7280',
+                      background: inputMode === mode ? 'var(--color-accent, #f59e0b)' : 'transparent',
+                      color: inputMode === mode ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
                       fontWeight: inputMode === mode ? 600 : 400,
                     }}
                   >
@@ -369,7 +369,7 @@ export default function Home() {
               {/* File upload */}
               {inputMode === 'file' && (
                 <div
-                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-[#1e1e30] hover:border-amber-500/40'}`}
+                  className={`rounded border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-200 ${dragActive ? 'border-amber-500 bg-amber-500/5' : 'border-border hover:border-amber-500/40'}`}
                   onDrop={(e) => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                   onDragLeave={() => setDragActive(false)}
@@ -377,9 +377,9 @@ export default function Home() {
                 >
                   <input ref={fileInputRef} type="file" accept=".docx,.doc" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 border border-[#1e1e30] rounded-lg flex items-center justify-center text-3xl text-gray-600">⬡</div>
+                    <div className="w-16 h-16 border border-border rounded-lg flex items-center justify-center text-3xl text-gray-600">⬡</div>
                     <div>
-                      <p className="text-white mb-1">{t.dropzone}</p>
+                      <p className="text-gray-900 mb-1">{t.dropzone}</p>
                       <p className="text-gray-600 text-sm">{t.dropzone_sub}</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-700">
@@ -397,7 +397,7 @@ export default function Home() {
                       value={pastedText}
                       onChange={(e) => setPastedText(e.target.value)}
                       placeholder={t.textarea_placeholder}
-                      className="w-full h-64 bg-[#080810] border border-[#1e1e30] rounded-lg p-4 text-sm text-gray-300 placeholder-gray-700 resize-none focus:outline-none focus:border-amber-500/40 transition-colors font-mono leading-relaxed"
+                      className="w-full h-64 bg-input border border-border rounded-lg p-4 text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none focus:border-amber-500/40 transition-colors font-mono leading-relaxed"
                     />
                     <div className="absolute bottom-3 right-3 text-xs text-gray-700">
                       {pastedText.length} chars
@@ -408,8 +408,8 @@ export default function Home() {
                     disabled={pastedText.trim().length < 100}
                     className="w-full py-3 rounded-lg text-sm font-semibold transition-all"
                     style={{
-                      background: pastedText.trim().length >= 100 ? '#f59e0b' : '#1e1e30',
-                      color: pastedText.trim().length >= 100 ? '#080810' : '#374151',
+                      background: pastedText.trim().length >= 100 ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
+                      color: pastedText.trim().length >= 100 ? 'var(--color-text, #111827)' : '#374151',
                       cursor: pastedText.trim().length >= 100 ? 'pointer' : 'not-allowed',
                     }}
                   >
@@ -422,7 +422,7 @@ export default function Home() {
                 <div className="mt-4 rounded border border-red-500/30 bg-red-500/5 p-4 flex items-start gap-3 animate-fade-in-up">
                   <span className="text-red-400 shrink-0">⚠</span>
                   <p className="text-red-400 text-sm flex-1">{error}</p>
-                  <button onClick={reset} className="text-xs text-gray-600 hover:text-white transition-colors">{t.dismiss}</button>
+                  <button onClick={reset} className="text-xs text-gray-600 hover:text-gray-900 transition-colors">{t.dismiss}</button>
                 </div>
               )}
             </>
@@ -448,27 +448,27 @@ export default function Home() {
                   {result.truncated && <span className="text-yellow-600"> · {t.truncated}</span>}
                 </p>
               </div>
-              <button onClick={reset} className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-[#1e1e30] hover:border-amber-500/40 px-4 py-2 rounded">
+              <button onClick={reset} className="text-xs text-gray-600 hover:text-amber-400 transition-colors border border-border hover:border-amber-500/40 px-4 py-2 rounded">
                 {t.new_analysis}
               </button>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-1 rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-6 flex items-center justify-center amber-glow">
+              <div className="md:col-span-1 rounded-lg border border-border bg-surface p-6 flex items-center justify-center amber-glow">
                 <ScoreGauge score={result.overall_score} verdict={result.verdict} />
               </div>
               <div className="md:col-span-2 space-y-4">
-                <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5">
+                <div className="rounded-lg border border-border bg-surface p-5">
                   <p className="text-xs text-gray-600 tracking-widest uppercase mb-2">{t.summary_label}</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{result.summary}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{result.summary}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: t.ai_score, value: `${result.overall_score}%`, color: result.overall_score > 60 ? '#ef4444' : result.overall_score > 35 ? '#eab308' : '#22c55e' },
-                    { label: t.confidence, value: result.confidence, color: '#e2e2f0' },
-                    { label: t.verdict, value: result.verdict, color: '#f59e0b' },
+                    { label: t.confidence, value: result.confidence, color: 'var(--color-text, #111827)' },
+                    { label: t.verdict, value: result.verdict, color: 'var(--color-accent, #f59e0b)' },
                   ].map(stat => (
-                    <div key={stat.label} className="rounded border border-[#1e1e30] bg-[#0f0f1a] p-3 text-center">
+                    <div key={stat.label} className="rounded border border-border bg-surface p-3 text-center">
                       <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1">{stat.label}</p>
                       <p className="text-sm font-semibold" style={{ color: stat.color }}>{stat.value}</p>
                     </div>
@@ -477,11 +477,11 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-5">
+            <div className="rounded-lg border border-border bg-surface p-5">
               <p className="text-xs text-gray-600 tracking-widest uppercase mb-3">{t.indicators}</p>
               <div className="flex flex-wrap gap-2">
                 {result.key_indicators.map((ind, i) => (
-                  <span key={i} className="text-xs px-3 py-1.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-300">{ind}</span>
+                  <span key={i} className="text-xs px-3 py-1.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-600">{ind}</span>
                 ))}
               </div>
             </div>
@@ -505,7 +505,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-[#1e1e30] px-6 py-6 mt-16">
+      <footer className="border-t border-border px-6 py-6 mt-16">
         <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-gray-700">
           <span>VERIDOC · AI Content Forensics</span>
           <span>{t.footer}</span>
