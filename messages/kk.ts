@@ -138,6 +138,7 @@ export const kk: Record<string, string> = {
   'users.labelPassword':         'Құпия сөз *',
   'users.labelRole':             'Рөл *',
   'users.filter.all':            'Барлығы',
+  'users.filter.allUnis':        'Барлық университеттер',
   'users.count':                 '{count} пайдаланушы',
   'users.empty':                 'Пайдаланушылар жоқ',
   'users.stat.admins':           'Әкімшілер',

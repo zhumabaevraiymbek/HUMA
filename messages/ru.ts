@@ -138,6 +138,7 @@ export const ru: Record<string, string> = {
   'users.labelPassword':         'Пароль *',
   'users.labelRole':             'Роль *',
   'users.filter.all':            'Все',
+  'users.filter.allUnis':        'Все университеты',
   'users.count':                 '{count} пользователей',
   'users.empty':                 'Нет пользователей',
   'users.stat.admins':           'Администраторов',

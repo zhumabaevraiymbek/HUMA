@@ -20,6 +20,7 @@ export default function UsersPage() {
   const [profile, setProfile] = useState<{ role: string; university_id: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'admin' | 'teacher' | 'student'>('all');
+  const [uniFilter, setUniFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -110,7 +111,18 @@ export default function UsersPage() {
     student: '#94a3b8',
   };
 
-  const filtered = filter === 'all' ? users : users.filter(u => u.role === filter);
+  const universities = profile?.role === 'superadmin'
+    ? Array.from(
+        new Map(
+          users
+            .filter(u => u.university_id && u.universities?.name)
+            .map(u => [u.university_id, u.universities!.name])
+        ).entries()
+      ).map(([id, name]) => ({ id: id as string, name }))
+    : [];
+
+  const roleFiltered = filter === 'all' ? users : users.filter(u => u.role === filter);
+  const filtered = uniFilter === 'all' ? roleFiltered : roleFiltered.filter(u => u.university_id === uniFilter);
 
   if (loading) {
     return (
@@ -245,6 +257,39 @@ export default function UsersPage() {
             </div>
           ))}
         </div>
+
+        {/* University filter (superadmin only) */}
+        {profile?.role === 'superadmin' && universities.length > 0 && (
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <button
+              onClick={() => setUniFilter('all')}
+              className="px-3 py-1.5 text-xs rounded border transition-all"
+              style={{
+                background: uniFilter === 'all' ? 'var(--color-accent, #f59e0b)' : 'transparent',
+                color: uniFilter === 'all' ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
+                borderColor: uniFilter === 'all' ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
+                fontWeight: uniFilter === 'all' ? 600 : 400,
+              }}
+            >
+              {t('users.filter.allUnis')}
+            </button>
+            {universities.map(uni => (
+              <button
+                key={uni.id}
+                onClick={() => setUniFilter(uni.id)}
+                className="px-3 py-1.5 text-xs rounded border transition-all"
+                style={{
+                  background: uniFilter === uni.id ? 'var(--color-accent, #f59e0b)' : 'transparent',
+                  color: uniFilter === uni.id ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
+                  borderColor: uniFilter === uni.id ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
+                  fontWeight: uniFilter === uni.id ? 600 : 400,
+                }}
+              >
+                {uni.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex items-center gap-2 mb-6">

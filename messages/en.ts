@@ -138,6 +138,7 @@ export const en: Record<string, string> = {
   'users.labelPassword':         'Password *',
   'users.labelRole':             'Role *',
   'users.filter.all':            'All',
+  'users.filter.allUnis':        'All Universities',
   'users.count':                 '{count} users',
   'users.empty':                 'No users',
   'users.stat.admins':           'Administrators',
