@@ -245,9 +245,10 @@ export default function UsersPage() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-4 gap-4 mb-8">
           {[
-            { labelKey: 'users.stat.admins', value: users.filter(u => u.role === 'admin').length, color: '#818cf8' },
+            { labelKey: 'users.stat.total',    value: users.length,                                    color: '#f59e0b' },
+            { labelKey: 'users.stat.admins',   value: users.filter(u => u.role === 'admin').length,   color: '#818cf8' },
             { labelKey: 'users.stat.teachers', value: users.filter(u => u.role === 'teacher').length, color: '#34d399' },
             { labelKey: 'users.stat.students', value: users.filter(u => u.role === 'student').length, color: '#94a3b8' },
           ].map(stat => (
@@ -260,34 +261,23 @@ export default function UsersPage() {
 
         {/* University filter (superadmin only) */}
         {profile?.role === 'superadmin' && universities.length > 0 && (
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <button
-              onClick={() => setUniFilter('all')}
-              className="px-3 py-1.5 text-xs rounded border transition-all"
+          <div className="flex items-center gap-2 mb-3">
+            <select
+              value={uniFilter}
+              onChange={(e) => setUniFilter(e.target.value)}
+              className="text-xs rounded border px-3 py-1.5 focus:outline-none transition-all font-mono"
               style={{
-                background: uniFilter === 'all' ? 'var(--color-accent, #f59e0b)' : 'transparent',
-                color: uniFilter === 'all' ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
-                borderColor: uniFilter === 'all' ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
-                fontWeight: uniFilter === 'all' ? 600 : 400,
+                background: uniFilter !== 'all' ? 'var(--color-accent, #f59e0b)' : 'var(--color-surface, #ffffff)',
+                color: uniFilter !== 'all' ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
+                borderColor: uniFilter !== 'all' ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
+                fontWeight: uniFilter !== 'all' ? 600 : 400,
               }}
             >
-              {t('users.filter.allUnis')}
-            </button>
-            {universities.map(uni => (
-              <button
-                key={uni.id}
-                onClick={() => setUniFilter(uni.id)}
-                className="px-3 py-1.5 text-xs rounded border transition-all"
-                style={{
-                  background: uniFilter === uni.id ? 'var(--color-accent, #f59e0b)' : 'transparent',
-                  color: uniFilter === uni.id ? 'var(--color-text, #111827)' : 'var(--color-muted, #6b7280)',
-                  borderColor: uniFilter === uni.id ? 'var(--color-accent, #f59e0b)' : 'var(--color-border, #e5e7eb)',
-                  fontWeight: uniFilter === uni.id ? 600 : 400,
-                }}
-              >
-                {uni.name}
-              </button>
-            ))}
+              <option value="all">{t('users.filter.allUnis')}</option>
+              {universities.map(uni => (
+                <option key={uni.id} value={uni.id}>{uni.name}</option>
+              ))}
+            </select>
           </div>
         )}
 

@@ -141,6 +141,7 @@ export const ru: Record<string, string> = {
   'users.filter.allUnis':        'Все университеты',
   'users.count':                 '{count} пользователей',
   'users.empty':                 'Нет пользователей',
+  'users.stat.total':            'Пользователи',
   'users.stat.admins':           'Администраторов',
   'users.stat.teachers':         'Преподавателей',
   'users.stat.students':         'Студентов',

@@ -141,6 +141,7 @@ export const kk: Record<string, string> = {
   'users.filter.allUnis':        'Барлық университеттер',
   'users.count':                 '{count} пайдаланушы',
   'users.empty':                 'Пайдаланушылар жоқ',
+  'users.stat.total':            'Пайдаланушылар',
   'users.stat.admins':           'Әкімшілер',
   'users.stat.teachers':         'Оқытушылар',
   'users.stat.students':         'Студенттер',

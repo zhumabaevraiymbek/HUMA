@@ -141,6 +141,7 @@ export const en: Record<string, string> = {
   'users.filter.allUnis':        'All Universities',
   'users.count':                 '{count} users',
   'users.empty':                 'No users',
+  'users.stat.total':            'Users',
   'users.stat.admins':           'Administrators',
   'users.stat.teachers':         'Teachers',
   'users.stat.students':         'Students',
